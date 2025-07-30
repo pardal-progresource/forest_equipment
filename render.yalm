@@ -1,0 +1,9 @@
+
+---
+
+## ⚙️ Instalação Local
+
+### 🔹 Clonar o projeto
+```bash
+git clone https://github.com/pardal-progresource/forest_equipment.git
+cd forest_equipment
