@@ -14,7 +14,10 @@ export default {
   data: () => ({ email: '', password: '' }),
   methods: {
     async login() {
-      const res = await axios.post('/api/auth/login', { email: this.email, password: this.password });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+  email: this.email,
+  password: this.password
+});
       localStorage.setItem('token', res.data.token);
       this.$router.push('/dashboard');
     }
