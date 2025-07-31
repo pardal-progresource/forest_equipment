@@ -2,6 +2,7 @@
   <div>
     <nav class="bg-green-700 text-white p-4 flex gap-4">
       <router-link to="/">Início</router-link>
+      <router-link to="/login">Login</router-link>
       <router-link to="/equipments">Equipamentos</router-link>
     </nav>
 
