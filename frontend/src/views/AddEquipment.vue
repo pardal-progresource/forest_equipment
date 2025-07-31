@@ -1,20 +1,36 @@
 <template>
-  <div class="max-w-md mx-auto p-4">
-    <h2 class="text-xl mb-4">Adicionar Equipamento</h2>
-    <form @submit.prevent="submit">
-      <input v-model="name" placeholder="Nome" class="input" required />
-      <textarea v-model="description" placeholder="Descrição" class="input mt-2" required></textarea>
-      <select v-model="status" class="input mt-2" required>
-        <option disabled value="">Selecione status</option>
-        <option value="available">Disponível</option>
-        <option value="in_use">Em uso</option>
-        <option value="maintenance">Manutenção</option>
-      </select>
-      <input type="file" @change="onFileChange" class="mt-2" />
-      <button class="btn mt-4" :disabled="loading">{{ loading ? 'Enviando...' : 'Enviar' }}</button>
+  <div class="max-w-xl mx-auto p-4">
+    <h2 class="text-2xl font-bold mb-4">Adicionar Equipamento</h2>
+
+    <form @submit.prevent="submitForm" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="block font-medium">Nome</label>
+        <input v-model="name" class="input w-full" required />
+      </div>
+
+      <div class="mb-3">
+        <label class="block font-medium">Descrição</label>
+        <textarea v-model="description" class="input w-full" required></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="block font-medium">Status</label>
+        <select v-model="status" class="input w-full" required>
+          <option value="available">Disponível</option>
+          <option value="in_use">Em uso</option>
+          <option value="maintenance">Em manutenção</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="block font-medium">Imagem</label>
+        <input type="file" @change="handleFile" class="input w-full" accept="image/*" />
+      </div>
+
+      <button type="submit" class="btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Adicionar
+      </button>
     </form>
-    <p v-if="error" class="text-red-600 mt-2">{{ error }}</p>
-    <p v-if="success" class="text-green-600 mt-2">Equipamento adicionado com sucesso!</p>
   </div>
 </template>
 
@@ -26,58 +42,41 @@ export default {
     return {
       name: '',
       description: '',
-      status: '',
+      status: 'available',
       imageFile: null,
-      loading: false,
-      error: '',
-      success: false,
     };
   },
   methods: {
-    onFileChange(event) {
-      this.imageFile = event.target.files[0] || null;
+    handleFile(event) {
+      this.imageFile = event.target.files[0];
     },
-    async submit() {
-      if (!this.name || !this.description || !this.status) {
-        this.error = 'Preencha todos os campos.';
+    async submitForm() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Acesso negado. Faça login.');
+        this.$router.push('/login');
         return;
       }
 
-      this.loading = true;
-      this.error = '';
-      this.success = false;
+      const formData = new FormData();
+      formData.append('name', this.name);
+      formData.append('description', this.description);
+      formData.append('status', this.status);
+      if (this.imageFile) formData.append('image', this.imageFile);
 
       try {
-        const formData = new FormData();
-        formData.append('name', this.name);
-        formData.append('description', this.description);
-        formData.append('status', this.status);
-        if (this.imageFile) formData.append('image', this.imageFile);
-
-        const token = localStorage.getItem('token');
-        if (!token) {
-          this.error = 'Usuário não autenticado.';
-          this.loading = false;
-          return;
-        }
-
-        await axios.post('/api/equipments', formData, {
+        await axios.post(`${import.meta.env.VITE_API_URL}/equipments`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
           },
         });
 
-        this.success = true;
-        this.name = '';
-        this.description = '';
-        this.status = '';
-        this.imageFile = null;
-        this.$refs.fileInput.value = null; // limpar input file
+        alert('Equipamento adicionado com sucesso!');
+        this.$router.push('/equipamentos');
       } catch (err) {
-        this.error = err.response?.data?.error || 'Erro ao enviar equipamento.';
-      } finally {
-        this.loading = false;
+        console.error('Erro ao adicionar equipamento:', err);
+        alert('Erro ao adicionar equipamento');
       }
     },
   },
@@ -86,21 +85,8 @@ export default {
 
 <style scoped>
 .input {
-  width: 100%;
-  padding: 0.5rem;
   border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.btn {
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
 }
 </style>
