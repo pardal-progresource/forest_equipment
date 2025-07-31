@@ -1,12 +1,16 @@
+// backend/src/routes/equipments.js
 const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
-// Configuração do armazenamento de arquivos
+// Importação dos middlewares
+const authenticateToken = require('../middleware/auth');
+const authorizedRoles = require('../middleware/roles');
+
+// Configuração de armazenamento para upload de imagens
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, '..', 'uploads');
@@ -20,17 +24,21 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Listar todos os equipamentos
+// Rota: GET /api/equipments - Listar todos os equipamentos
 router.get('/', async (req, res) => {
-  const equipments = await prisma.equipment.findMany();
-  res.json(equipments);
+  try {
+    const equipments = await prisma.equipment.findMany();
+    res.json(equipments);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar equipamentos' });
+  }
 });
 
-// Criar novo equipamento (protegido e apenas para admins)
+// Rota: POST /api/equipments - Criar equipamento (apenas para admin)
 router.post(
   '/',
   authenticateToken,
-  authorizeRoles('admin'),
+  authorizedRoles('admin'),
   upload.single('image'),
   async (req, res) => {
     try {
@@ -38,7 +46,12 @@ router.post(
       const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
       const equipment = await prisma.equipment.create({
-        data: { name, description, imageUrl, status }
+        data: {
+          name,
+          description,
+          imageUrl,
+          status
+        }
       });
 
       res.status(201).json(equipment);
