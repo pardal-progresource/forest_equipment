@@ -4,6 +4,8 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
+    "build": "npx prisma generate",
+    "postinstall": "npx prisma migrate deploy",
     "start": "node src/index.js",
     "prisma": "prisma"
   },
