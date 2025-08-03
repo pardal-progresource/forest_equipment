@@ -52,8 +52,10 @@ export default {
     }
   },
   async mounted() {
+  console.log('Mounted Equipments.vue'); // <-- Isto deve aparecer no console
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/equipments`);
+      console.log('Equipamentos carregados:', res.data); // <-- Isto também
       this.equipments = res.data;
     } catch (err) {
       console.error('Erro ao carregar equipamentos:', err);
